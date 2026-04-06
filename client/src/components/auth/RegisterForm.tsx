@@ -42,7 +42,9 @@ export function RegisterForm({ authApi }: { authApi: IAuthAPIService }) {
       <form onSubmit={submit} className="flex flex-col gap-4">
         {(["username","fullname", "email", "password"] as const).map((field) => (
           <div key={field}>
-            <label className="block text-xs text-white/40 mb-2 font-medium capitalize">{field}</label>
+            <label className="block text-xs text-white/40 mb-2 font-medium">
+              {field === "fullname" ? "Full Name" : field.charAt(0).toUpperCase() + field.slice(1)}
+            </label>
             <input
               type={field === "password" ? "password" : field === "email" ? "email" : "text"}
               value={form[field]} onChange={set(field)} required
