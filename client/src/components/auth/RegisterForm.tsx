@@ -4,14 +4,23 @@ import type { IAuthAPIService } from "../../api_services/auth/IAuthAPIService";
 
 export function RegisterForm({ authApi }: { authApi: IAuthAPIService }) {
   const { login } = useAuth();
-  const [form, setForm] = useState({ username: "", email: "", password: "" });
+  const [form, setForm] = useState({ username: "", fullname: "", email: "", password: "",image:"" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm(f => ({ ...f, [k]: e.target.value }));
 
+  const setImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onloadend = () => {
+      setForm(f => ({ ...f, image: reader.result as string }));};
+      reader.readAsDataURL(file);
+  }
+
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); setError(""); setLoading(true);
-    const res = await authApi.register(form.username, form.email, form.password, "user");
+    const res = await authApi.register(form.username,form.fullname, form.email, form.password, form.image, "user");
     setLoading(false);
     if (!res.success || !res.data) { setError(res.message ?? "Registration failed"); return; }
     login(res.data);
@@ -31,7 +40,7 @@ export function RegisterForm({ authApi }: { authApi: IAuthAPIService }) {
       )}
 
       <form onSubmit={submit} className="flex flex-col gap-4">
-        {(["username", "email", "password"] as const).map((field) => (
+        {(["username","fullname", "email", "password"] as const).map((field) => (
           <div key={field}>
             <label className="block text-xs text-white/40 mb-2 font-medium capitalize">{field}</label>
             <input
@@ -41,6 +50,16 @@ export function RegisterForm({ authApi }: { authApi: IAuthAPIService }) {
               placeholder={field === "password" ? "Minimum 8 chars, 1 uppercase, 1 number" : ""} />
           </div>
         ))}
+         <div>
+          <label className="block text-xs text-white/40 mb-2 font-medium">
+            Profile image
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={setImage}
+            className="w-full bg-slate-800/60 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:bg-slate-700 file:text-white hover:file:bg-slate-600"/>
+        </div>
         <button type="submit" disabled={loading}
           className="mt-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl py-3 text-sm transition-colors cursor-pointer">
           {loading ? "Creating account…" : "Create account"}
